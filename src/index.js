@@ -5,6 +5,8 @@ const competitionRoute = require("./routes/competitionRoute");
 const competitionLinkRoute = require("./routes/competitionLinkRoute");
 const homeRoute = require("./routes/homeRoute");
 const coverRoute = require("./routes/coverRoute");
+const categoryRoute = require("./routes/categoryRoute");
+const placeRoute = require("./routes/placeRoute");
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -34,6 +36,8 @@ app.use("/api/", competitionRoute);
 app.use("/api/", competitionLinkRoute);
 app.use("/api/", homeRoute);
 app.use("/api/", coverRoute);
+app.use("/api/", categoryRoute);
+app.use("/api/", placeRoute);
 
 app.listen(port, () => {
   console.log("Server is up on port " + port);
