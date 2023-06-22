@@ -1,24 +1,52 @@
 const express = require("express");
-const multer = require("multer");
+const sharp = require("sharp");
 const Winner = require("../models/winners");
 const router = new express.Router();
 
-router.post("/winners", async (req, res) => {
+const upload = require("../utils/multer");
+
+router.post("/winners", upload.single("upload"), async (req, res) => {
+  const fullUrl = req.protocol + "://" + req.get("host") + req.originalUrl;
   const winner = new Winner(req.body);
+
+  const buffer = await sharp(req.file.buffer)
+    .resize({ width: 250, height: 250 })
+    .png()
+    .toBuffer();
+
+  if (req.file?.buffer) {
+    winner.img = buffer;
+  }
 
   try {
     await winner.save();
-    res.status(201).send(winner);
+    res.status(201).send({
+      _id: winner._id,
+      title: winner.title,
+      location: winner.location,
+      img: `${fullUrl}/upload/${winner._id}`,
+    });
   } catch (e) {
     res.status(400).send(e);
   }
 });
 
 router.get("/winners", async (req, res) => {
+  const fullUrl = `${req.protocol}:${req.get("host")}/api/winners/upload/`;
   const winners = await Winner.find({});
 
+  const updateWinners = winners.map((winner) => {
+    return {
+      _id: winner._id,
+      location: winner.location,
+      title: winner.title,
+      price: winner.price,
+      img: winner.img ? fullUrl + winner._id : "",
+    };
+  });
+
   try {
-    res.send(winners);
+    res.send(updateWinners);
   } catch (e) {
     res.status(400).send(e);
   }
@@ -46,18 +74,6 @@ router.delete("/winners", async (req, res) => {
   } catch (e) {
     res.status(400).send(e);
   }
-});
-
-const upload = multer({
-  limits: {
-    fileSize: 5000000,
-  },
-  fileFilter(req, file, cb) {
-    if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
-      return cb(new Error("please upload an image"));
-    }
-    cb(undefined, true);
-  },
 });
 
 router.get("/winners/upload/:id", async (req, res) => {
