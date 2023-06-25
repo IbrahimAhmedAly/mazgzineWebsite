@@ -7,6 +7,7 @@ const homeRoute = require("./routes/homeRoute");
 const coverRoute = require("./routes/coverRoute");
 const categoryRoute = require("./routes/categoryRoute");
 const placeRoute = require("./routes/placeRoute");
+const newRoute = require("./routes/newRoute");
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -38,6 +39,7 @@ app.use("/api/", homeRoute);
 app.use("/api/", coverRoute);
 app.use("/api/", categoryRoute);
 app.use("/api/", placeRoute);
+app.use("/api/", newRoute);
 
 app.listen(port, () => {
   console.log("Server is up on port " + port);
