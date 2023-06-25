@@ -38,7 +38,10 @@ router.get("/home", async (req, res) => {
   const fullUrl = `${req.protocol}:${req.get("host")}/api/home/upload/`;
   const homes = await Home.find({});
 
-  const updateHomes = homes.map((home) => {
+  // Get query parameter
+  const { title, price } = req.query;
+
+  const updatedHomes = homes.map((home) => {
     return {
       _id: home._id,
       location: home.location,
@@ -48,8 +51,21 @@ router.get("/home", async (req, res) => {
     };
   });
 
+  const filteredHomes = updatedHomes.filter((home) => {
+    if (title && home.title.match(title)) {
+      return true;
+    }
+
+    if (price && home.price.toString().match(price)) {
+      return true;
+    }
+    return false;
+  });
+
+  const data = filteredHomes.length > 0 ? filteredHomes : updatedHomes;
+
   try {
-    res.send(updateHomes);
+    res.send(data);
   } catch (e) {
     res.status(400).send(e);
   }

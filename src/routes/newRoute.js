@@ -35,7 +35,10 @@ router.get("/news", async (req, res) => {
   const fullUrl = `${req.protocol}:${req.get("host")}/api/news/upload/`;
   const news = await New.find({});
 
-  const updateNews = news.map((news) => {
+  // Get query parameter
+  const { title } = req.query;
+
+  const updatedNews = news.map((news) => {
     return {
       _id: news._id,
       description: news.description,
@@ -44,8 +47,14 @@ router.get("/news", async (req, res) => {
     };
   });
 
+  const filterdNews = updatedNews.filter(
+    (news) => title && news.title.match(title)
+  );
+
+  const data = filterdNews.length > 0 ? filterdNews : updatedNews;
+
   try {
-    res.send(updateNews);
+    res.send(data);
   } catch (e) {
     res.status(400).send(e);
   }
