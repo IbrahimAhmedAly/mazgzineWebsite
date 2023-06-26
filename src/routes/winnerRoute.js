@@ -60,7 +60,7 @@ router.delete("/winners/:id", async (req, res) => {
       res.status(404).send();
     }
 
-    res.send(winner);
+    res.send();
   } catch (e) {
     res.status(400).send(e);
   }
