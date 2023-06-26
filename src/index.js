@@ -27,11 +27,13 @@ mongoose
   .then(() => console.log("Db Connection Successful!!"))
   .catch((err) => console.log(err));
 
-app.get("/api/test", () => {
-  console.log("testing successful");
-});
-
 app.use(express.json());
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+  })
+);
+
 app.use("/api/", winnerRoute);
 app.use("/api/", competitionRoute);
 app.use("/api/", competitionLinkRoute);
