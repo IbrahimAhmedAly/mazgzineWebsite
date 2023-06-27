@@ -25,6 +25,8 @@ router.post("/news", upload.single("upload"), async (req, res) => {
       title: news.title,
       description: news.description,
       img: `${fullUrl}/upload/${news._id}`,
+      createdAt: news.createdAt,
+      updatedAt: news.updatedAt,
     });
   } catch (e) {
     res.status(400).send(e);
@@ -44,6 +46,8 @@ router.get("/news", async (req, res) => {
       description: news.description,
       title: news.title,
       img: news.img ? fullUrl + news._id : "",
+      createdAt: news.createdAt,
+      updatedAt: news.updatedAt,
     };
   });
 
