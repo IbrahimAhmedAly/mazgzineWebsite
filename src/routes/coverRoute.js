@@ -1,4 +1,5 @@
 const express = require("express");
+const { MongoClient, ObjectId } = require("mongodb");
 const sharp = require("sharp");
 const Cover = require("../models/covers");
 const router = new express.Router();
@@ -32,6 +33,27 @@ router.post("/covers", upload.single("upload"), async (req, res) => {
 router.get("/covers", async (req, res) => {
   const fullUrl = `${req.protocol}:${req.get("host")}/api/covers/upload/`;
   const covers = await Cover.find({});
+
+  const updateCovers = covers.map((cover) => {
+    return {
+      _id: cover._id,
+      img: cover.img ? fullUrl + cover._id : "",
+    };
+  });
+
+  try {
+    res.send(updateCovers);
+  } catch (e) {
+    res.status(400).send(e);
+  }
+});
+
+router.get("/covers/:id", async (req, res) => {
+  const fullUrl = `${req.protocol}:${req.get("host")}/api/covers/upload/`;
+
+  const query = { _id: { $ne: new ObjectId(req.params.id) } };
+
+  const covers = await Cover.find(query);
 
   const updateCovers = covers.map((cover) => {
     return {

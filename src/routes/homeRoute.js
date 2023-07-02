@@ -26,7 +26,7 @@ router.post("/home", upload.single("upload"), async (req, res) => {
       title: home.title,
       location: home.location,
       price: home.price,
-      img: `${fullUrl}upload/${home._id}`,
+      img: `${fullUrl}/upload/${home._id}`,
     });
   } catch (e) {
     console.log(e);
