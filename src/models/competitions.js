@@ -12,6 +12,9 @@ const competitionSchema = new mongoose.Schema({
   img: {
     type: Buffer,
   },
+  competitionLink: {
+    type: String,
+  },
 });
 
 const Competition = mongoose.model("Competition", competitionSchema);

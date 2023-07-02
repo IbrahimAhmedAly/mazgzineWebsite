@@ -24,6 +24,7 @@ router.post("/competition", upload.single("upload"), async (req, res) => {
       _id: competition._id,
       title: competition.title,
       description: competition.description,
+      competitionLink: competition.competitionLink,
       img: `${fullUrl}/upload/${competition._id}`,
     });
   } catch (e) {
@@ -41,6 +42,7 @@ router.get("/competitions", async (req, res) => {
       _id: competition._id,
       title: competition.title,
       description: competition.description,
+      competitionLink: competition.competitionLink,
       img: competition.img ? fullUrl + competition._id : "",
     };
   });
@@ -63,6 +65,7 @@ router.get("/competition/:id", async (req, res) => {
       _id: competition._id,
       title: competition.title,
       description: competition.description,
+      competitionLink: competition.competitionLink,
       img: fullUrl,
     });
   } catch (e) {
@@ -80,7 +83,7 @@ router.patch("/competition/:id", upload.single("upload"), async (req, res) => {
     .toBuffer();
 
   const updates = Object.keys(req.body);
-  const allowedUpdates = ["title", "description", "upload"];
+  const allowedUpdates = ["title", "description", "competitionLink", "upload"];
 
   const isValidOperation = updates.every((update) =>
     allowedUpdates.includes(update)
@@ -107,6 +110,7 @@ router.patch("/competition/:id", upload.single("upload"), async (req, res) => {
       _id: competition._id,
       title: competition.title,
       description: competition.description,
+      competitionLink: competition.competitionLink,
       img: fullUrl,
     });
   } catch (e) {
