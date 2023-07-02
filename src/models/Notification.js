@@ -2,6 +2,10 @@ const mongoose = require("mongoose");
 
 const notificationSchema = new mongoose.Schema(
   {
+    title: {
+      type: String,
+      required: false,
+    },
     message: {
       type: String,
       required: true,

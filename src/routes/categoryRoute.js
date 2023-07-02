@@ -122,7 +122,7 @@ router.patch("/category/:id", upload.single("upload"), async (req, res) => {
 
 router.delete("/category/:id", async (req, res) => {
   try {
-    const category = await Category.findOneAndDelete({ _id: req.params.id });
+    const category = await Category.findByIdAndRemove(req.params.id);
 
     if (!category) {
       res.status(404).send();
@@ -130,6 +130,7 @@ router.delete("/category/:id", async (req, res) => {
 
     res.send();
   } catch (e) {
+    console.log(e);
     res.status(400).send(e);
   }
 });
