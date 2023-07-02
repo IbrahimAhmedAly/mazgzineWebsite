@@ -103,6 +103,20 @@ router.patch("/category/:id", upload.single("upload"), async (req, res) => {
   }
 });
 
+router.delete("/category/:id", async (req, res) => {
+  try {
+    const category = await Category.findOneAndDelete({ _id: req.params.id });
+
+    if (!category) {
+      res.status(404).send();
+    }
+
+    res.send();
+  } catch (e) {
+    res.status(400).send(e);
+  }
+});
+
 router.get("/category/upload/:id", async (req, res) => {
   try {
     const category = await Category.findById(req.params.id);
