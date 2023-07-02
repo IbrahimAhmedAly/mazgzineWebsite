@@ -84,11 +84,11 @@ router.get("/covers/upload/:id", async (req, res) => {
 });
 
 router.delete("/covers/upload/:id", async (req, res) => {
-  const _id = req.params.id;
+  const cover = await Cover.findOneAndDelete({ _id: req.params.id });
 
-  const cover = await Cover.findOne({ _id });
-  cover.img = undefined;
-  await cover.save();
+  if (!cover) {
+    res.status(404).send();
+  }
 
   res.send();
 });
