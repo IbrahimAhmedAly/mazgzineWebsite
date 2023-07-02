@@ -49,6 +49,23 @@ router.get("/category", async (req, res) => {
   }
 });
 
+router.get("/getCategory/:id", async (req, res) => {
+  const fullUrl = `${req.protocol}:${req.get("host")}/api/category/upload/${
+    req.params.id
+  }`;
+  const category = await Category.findById({ _id: req.params.id });
+
+  try {
+    res.send({
+      _id: category._id,
+      title: category.title,
+      img: fullUrl,
+    });
+  } catch (e) {
+    res.status(400).send(e);
+  }
+});
+
 router.get("/category/:id", async (req, res) => {
   const category = await Category.findById({ _id: req.params.id });
 
