@@ -2,7 +2,7 @@ const express = require("express");
 
 const winnerRoute = require("./routes/winnerRoute");
 const competitionRoute = require("./routes/competitionRoute");
-const competitionLinkRoute = require("./routes/competitionLinkRoute");
+const coverLinkRoute = require("./routes/coverLinkRoute");
 const homeRoute = require("./routes/homeRoute");
 const coverRoute = require("./routes/coverRoute");
 const categoryRoute = require("./routes/categoryRoute");
@@ -51,13 +51,13 @@ app.use(
 
 app.use("/api/", winnerRoute);
 app.use("/api/", competitionRoute);
-app.use("/api/", competitionLinkRoute);
 app.use("/api/", homeRoute);
 app.use("/api/", coverRoute);
 app.use("/api/", categoryRoute);
 app.use("/api/", placeRoute);
 app.use("/api/", newRoute);
 app.use("/api/", notificationRoute);
+app.use("/api/", coverLinkRoute);
 app.use("/api/", goldsCoverRoute);
 app.use("/api/", awardsRoute);
 
