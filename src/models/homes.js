@@ -10,6 +10,14 @@ const homesSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    addressLink: {
+      type: String,
+      required: true,
+    },
+    phone: {
+      type: String,
+      required: true,
+    },
     price: {
       type: Number,
       required: true,
