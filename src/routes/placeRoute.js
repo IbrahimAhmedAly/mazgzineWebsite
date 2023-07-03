@@ -23,6 +23,16 @@ router.get("/places", async (req, res) => {
   }
 });
 
+router.get("/place/:id", async (req, res) => {
+  const place = await Place.findById({ _id: req.params.id });
+
+  try {
+    res.send(place);
+  } catch (e) {
+    res.status(400).send(e);
+  }
+});
+
 router.patch("/place/:id", async (req, res) => {
   const updates = Object.keys(req.body);
   const allowedUpdates = ["title", "location", "phone", "categoryId"];
