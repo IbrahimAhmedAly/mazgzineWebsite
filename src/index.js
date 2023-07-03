@@ -37,9 +37,14 @@ app.use((req, res, next) => {
   next();
 });
 
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://admin-panel-l4je1hq2m-ibrahimahmedaly.vercel.app",
+];
+
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: allowedOrigins,
   })
 );
 
