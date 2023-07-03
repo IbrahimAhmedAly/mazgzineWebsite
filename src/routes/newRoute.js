@@ -76,6 +76,8 @@ router.get("/new/:id", async (req, res) => {
       title: news.title,
       description: news.description,
       img: fullUrl,
+      createdAt: news.createdAt,
+      updatedAt: news.updatedAt,
     });
   } catch (e) {
     res.status(400).send(e);
