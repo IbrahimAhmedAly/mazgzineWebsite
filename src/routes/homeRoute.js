@@ -27,6 +27,8 @@ router.post("/home", upload.single("upload"), async (req, res) => {
       location: home.location,
       price: home.price,
       img: `${fullUrl}/upload/${home._id}`,
+      createdAt: home.createdAt,
+      updatedAt: home.updatedAt,
     });
   } catch (e) {
     console.log(e);
@@ -48,6 +50,8 @@ router.get("/home", async (req, res) => {
       title: home.title,
       price: home.price,
       img: home.img ? fullUrl + home._id : "",
+      createdAt: home.createdAt,
+      updatedAt: home.updatedAt,
     };
   });
 
@@ -84,6 +88,8 @@ router.get("/home/:id", async (req, res) => {
       location: home.location,
       price: home.price,
       img: fullUrl,
+      createdAt: home.createdAt,
+      updatedAt: home.updatedAt,
     });
   } catch (e) {
     res.status(400).send(e);
@@ -130,6 +136,8 @@ router.patch("/home/:id", upload.single("upload"), async (req, res) => {
       location: home.location,
       price: home.price,
       img: fullUrl,
+      createdAt: home.createdAt,
+      updatedAt: home.updatedAt,
     });
   } catch (e) {
     res.status(400).send(e);
