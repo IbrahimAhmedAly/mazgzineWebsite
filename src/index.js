@@ -10,6 +10,7 @@ const placeRoute = require("./routes/placeRoute");
 const newRoute = require("./routes/newRoute");
 const notificationRoute = require("./routes/notificaitonRoute");
 const goldsCoverRoute = require("./routes/goldsCoverRoute");
+const awardsRoute = require("./routes/awardsRoute");
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -58,6 +59,7 @@ app.use("/api/", placeRoute);
 app.use("/api/", newRoute);
 app.use("/api/", notificationRoute);
 app.use("/api/", goldsCoverRoute);
+app.use("/api/", awardsRoute);
 
 app.listen(port, () => {
   console.log("Server is up on port " + port);
