@@ -1,8 +1,8 @@
 const mongoose = require("mongoose");
 
 const goldsCoverSchema = new mongoose.Schema({
-  img: {
-    type: Buffer,
+  link: {
+    type: String,
   },
 });
 
