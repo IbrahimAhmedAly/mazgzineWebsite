@@ -26,12 +26,14 @@ router.post("/home", upload.single("upload"), async (req, res) => {
       title: home.title,
       location: home.location,
       price: home.price,
+      addressLink: home.addressLink,
+      phone: home.phone,
+      ownerName: home.ownerName,
       img: `${fullUrl}/upload/${home._id}`,
       createdAt: home.createdAt,
       updatedAt: home.updatedAt,
     });
   } catch (e) {
-    console.log(e);
     res.status(400).send(e);
   }
 });
@@ -49,6 +51,9 @@ router.get("/home", async (req, res) => {
       location: home.location,
       title: home.title,
       price: home.price,
+      addressLink: home.addressLink,
+      phone: home.phone,
+      ownerName: home.ownerName,
       img: home.img ? fullUrl + home._id : "",
       createdAt: home.createdAt,
       updatedAt: home.updatedAt,
@@ -87,6 +92,9 @@ router.get("/home/:id", async (req, res) => {
       title: home.title,
       location: home.location,
       price: home.price,
+      addressLink: home.addressLink,
+      phone: home.phone,
+      ownerName: home.ownerName,
       img: fullUrl,
       createdAt: home.createdAt,
       updatedAt: home.updatedAt,
@@ -106,7 +114,15 @@ router.patch("/home/:id", upload.single("upload"), async (req, res) => {
     .toBuffer();
 
   const updates = Object.keys(req.body);
-  const allowedUpdates = ["title", "location", "price", "upload"];
+  const allowedUpdates = [
+    "title",
+    "location",
+    "price",
+    "addressLink",
+    "phone",
+    "ownerName",
+    "upload",
+  ];
 
   const isValidOperation = updates.every((update) =>
     allowedUpdates.includes(update)
@@ -135,6 +151,9 @@ router.patch("/home/:id", upload.single("upload"), async (req, res) => {
       title: home.title,
       location: home.location,
       price: home.price,
+      addressLink: home.addressLink,
+      phone: home.phone,
+      ownerName: home.ownerName,
       img: fullUrl,
       createdAt: home.createdAt,
       updatedAt: home.updatedAt,

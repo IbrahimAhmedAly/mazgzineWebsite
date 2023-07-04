@@ -10,6 +10,10 @@ const homesSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    price: {
+      type: Number,
+      required: true,
+    },
     addressLink: {
       type: String,
       required: true,
@@ -18,8 +22,8 @@ const homesSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    price: {
-      type: Number,
+    ownerName: {
+      type: String,
       required: true,
     },
     img: {
