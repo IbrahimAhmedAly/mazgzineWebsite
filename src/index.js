@@ -1,4 +1,9 @@
+const path = require("path");
+const http = require("http");
 const express = require("express");
+const socketio = require("socket.io");
+
+const Notificaiton = require("./models/Notification");
 
 const winnerRoute = require("./routes/winnerRoute");
 const competitionRoute = require("./routes/competitionRoute");
@@ -13,14 +18,19 @@ const goldsCoverRoute = require("./routes/goldsCoverRoute");
 const awardsRoute = require("./routes/awardsRoute");
 
 const app = express();
+const server = http.createServer(app);
+const io = socketio(server);
+
 const port = process.env.PORT || 3000;
+const publicDirectoryPath = path.join(__dirname, "./public");
+
+app.use(express.static(publicDirectoryPath));
 
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const cors = require("cors");
 
 //Routes
-
 dotenv.config();
 
 mongoose
@@ -61,6 +71,25 @@ app.use("/api/", coverLinkRoute);
 app.use("/api/", goldsCoverRoute);
 app.use("/api/", awardsRoute);
 
-app.listen(port, () => {
+async function connectToMongoDB() {
+  // MongoDB change stream setup
+  const changeStream = Notificaiton.watch();
+  changeStream.on("change", (change) => {
+    if (change.operationType === "insert") {
+      const newRecord = change.fullDocument;
+      console.log(newRecord);
+      io.emit("newRecord", newRecord);
+    }
+  });
+}
+
+io.on("connection", (socket) => {
+  console.log("New client connected");
+
+  socket.emit("message", "Welcome!");
+});
+
+server.listen(port, () => {
   console.log("Server is up on port " + port);
+  connectToMongoDB();
 });
