@@ -3,6 +3,10 @@ const http = require("http");
 const express = require("express");
 const socketio = require("socket.io");
 
+const upload = require("./upload-images/multer");
+const cloudinary = require("./upload-images/cloudinary");
+const fs = require("fs");
+
 const Notificaiton = require("./models/Notification");
 
 const winnerRoute = require("./routes/winnerRoute");
@@ -29,6 +33,34 @@ app.use(express.static(publicDirectoryPath));
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const cors = require("cors");
+
+// // POST_REQUEST
+// app.use("/upload-images", upload.array("upload"), async (req, res) => {
+//   const uploader = async (path) => await cloudinary.uploads(path, "Images");
+
+//   if (req.method === "POST") {
+//     const urls = [];
+
+//     const files = req.files;
+
+//     for (const file of files) {
+//       const { path } = file;
+
+//       const newPath = await uploader(path);
+//       urls.push(newPath);
+
+//       fs.unlinkSync(path);
+//     }
+
+//     res.status(200).json({
+//       data: urls,
+//     });
+//   } else {
+//     res.status(405).json({
+//       err: "images not uploaded successuflly",
+//     });
+//   }
+// });
 
 //Routes
 dotenv.config();

@@ -1,66 +1,52 @@
 const express = require("express");
+// const cloudinarytest = require("cloudinary");
 const sharp = require("sharp");
 const Home = require("../models/homes");
 const router = new express.Router();
 
+const uploadImage = require("../upload-images/multer");
+const cloudinary = require("../upload-images/cloudinary");
+const fs = require("fs");
+
 const upload = require("../utils/multer");
+const { error } = require("console");
 
-router.post("/home", upload.single("upload"), async (req, res) => {
-  const fullUrl = req.protocol + "://" + req.get("host") + req.originalUrl;
+router.post("/home", uploadImage.array("upload", 10), async (req, res) => {
+  const { title, location, price, addressLink, phone, ownerName } = req.body;
 
-  const buffer = await sharp(req.file.buffer)
-    .resize({ width: 250, height: 250 })
-    .png()
-    .toBuffer();
+  const uploader = (path) => cloudinary.uploads(path, "Images");
 
-  const home = new Home(req.body);
+  const imagePromises = req.files.map((file) => uploader(file.path));
+  const uploadedImages = await Promise.all(imagePromises);
 
-  if (req.file?.buffer) {
-    home.img = buffer;
-  }
+  req.files.map((file) => fs.unlinkSync(file.path));
+
+  const home = new Home({
+    title,
+    location,
+    price,
+    addressLink,
+    phone,
+    ownerName,
+    images: uploadedImages,
+  });
 
   try {
     await home.save();
-    res.status(201).send({
-      _id: home._id,
-      title: home.title,
-      location: home.location,
-      price: home.price,
-      addressLink: home.addressLink,
-      phone: home.phone,
-      ownerName: home.ownerName,
-      img: `${fullUrl}/upload/${home._id}`,
-      createdAt: home.createdAt,
-      updatedAt: home.updatedAt,
-    });
+    res.status(201).send(home);
   } catch (e) {
+    console.log(e);
     res.status(400).send(e);
   }
 });
 
 router.get("/home", async (req, res) => {
-  const fullUrl = `${req.protocol}:${req.get("host")}/api/home/upload/`;
   const homes = await Home.find({});
 
   // Get query parameter
   const { title, price } = req.query;
 
-  const updatedHomes = homes.map((home) => {
-    return {
-      _id: home._id,
-      location: home.location,
-      title: home.title,
-      price: home.price,
-      addressLink: home.addressLink,
-      phone: home.phone,
-      ownerName: home.ownerName,
-      img: home.img ? fullUrl + home._id : "",
-      createdAt: home.createdAt,
-      updatedAt: home.updatedAt,
-    };
-  });
-
-  const filteredHomes = updatedHomes.filter((home) => {
+  const filteredHomes = homes.filter((home) => {
     if (title && home.title.match(title)) {
       return true;
     }
@@ -71,7 +57,7 @@ router.get("/home", async (req, res) => {
     return false;
   });
 
-  const data = filteredHomes.length > 0 ? filteredHomes : updatedHomes;
+  const data = filteredHomes.length > 0 ? filteredHomes : homes;
 
   try {
     res.send(data);
@@ -81,24 +67,10 @@ router.get("/home", async (req, res) => {
 });
 
 router.get("/home/:id", async (req, res) => {
-  const fullUrl = `${req.protocol}:${req.get("host")}/api/home/upload/${
-    req.params.id
-  }`;
   const home = await Home.findById({ _id: req.params.id });
 
   try {
-    res.send({
-      _id: home._id,
-      title: home.title,
-      location: home.location,
-      price: home.price,
-      addressLink: home.addressLink,
-      phone: home.phone,
-      ownerName: home.ownerName,
-      img: fullUrl,
-      createdAt: home.createdAt,
-      updatedAt: home.updatedAt,
-    });
+    res.send(home);
   } catch (e) {
     res.status(400).send(e);
   }
@@ -165,40 +137,28 @@ router.patch("/home/:id", upload.single("upload"), async (req, res) => {
 
 router.delete("/home/:id", async (req, res) => {
   try {
-    const home = await Home.findOneAndDelete({ _id: req.params.id });
+    const home = await Home.findById({ _id: req.params.id });
 
     if (!home) {
       res.status(404).send();
     }
+
+    home.images.map((image) =>
+      cloudinary
+        .destory(image.id)
+        .then((result) => {
+          // console.log("Image deleted:", result);
+        })
+        .catch((error) => {
+          console.log("Error deleting image:", error);
+        })
+    );
+
+    await Home.findOneAndDelete({ _id: req.params.id });
 
     res.send();
   } catch (e) {
     res.status(400).send(e);
   }
 });
-
-router.get("/home/upload/:id", async (req, res) => {
-  try {
-    const home = await Home.findById(req.params.id);
-
-    if (!home || !home.img) {
-      throw new Error();
-    }
-    res.set("Content-Type", "image/png");
-    res.send(home.img);
-  } catch (error) {
-    res.status(404).send();
-  }
-});
-
-router.delete("/home/upload/:id", async (req, res) => {
-  const _id = req.params.id;
-
-  const home = await Home.findOne({ _id });
-  home.img = undefined;
-  await home.save();
-
-  res.send();
-});
-
 module.exports = router;

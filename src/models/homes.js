@@ -26,9 +26,17 @@ const homesSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    img: {
-      type: Buffer,
-    },
+    // images: [{ type: String }],
+    images: [
+      {
+        url: {
+          type: String,
+        },
+        id: {
+          type: String,
+        },
+      },
+    ],
   },
   { timestamps: true }
 );
