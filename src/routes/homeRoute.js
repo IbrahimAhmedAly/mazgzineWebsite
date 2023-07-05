@@ -1,5 +1,4 @@
 const express = require("express");
-// const cloudinarytest = require("cloudinary");
 const sharp = require("sharp");
 const Home = require("../models/homes");
 const router = new express.Router();
