@@ -74,6 +74,7 @@ mongoose
   .catch((err) => console.log(err));
 
 app.use(express.json());
+app.use(express.static("uploads"));
 // middlewares
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Credentials", true);
