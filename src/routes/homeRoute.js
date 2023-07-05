@@ -5,7 +5,7 @@ const router = new express.Router();
 
 const upload = require("../upload-images/multer");
 const { uploadImageToCloudinary } = require("../upload-images/cloudinary");
-const cloudinary = require("../upload-images/cloudinary");
+const { destory } = require("../upload-images/cloudinary");
 
 router.post("/home", upload.array("upload", 10), async (req, res) => {
   const { title, location, price, addressLink, phone, ownerName } = req.body;
@@ -30,7 +30,6 @@ router.post("/home", upload.array("upload", 10), async (req, res) => {
     await home.save();
     res.status(201).send(home);
   } catch (e) {
-    console.log(e);
     res.status(400).send(e);
   }
 });
@@ -71,15 +70,7 @@ router.get("/home/:id", async (req, res) => {
   }
 });
 
-router.patch("/home/:id", upload.single("upload"), async (req, res) => {
-  const fullUrl = `${req.protocol}:${req.get("host")}/api/home/upload/${
-    req.params.id
-  }`;
-  const buffer = await sharp(req.file.buffer)
-    .resize({ width: 250, height: 250 })
-    .png()
-    .toBuffer();
-
+router.patch("/home/:id", upload.array("upload"), async (req, res) => {
   const updates = Object.keys(req.body);
   const allowedUpdates = [
     "title",
@@ -106,25 +97,28 @@ router.patch("/home/:id", upload.single("upload"), async (req, res) => {
       return res.status(404).send();
     }
 
-    if (req.file?.buffer) {
-      home.img = buffer;
-    }
+    home.images.map((image) =>
+      destory(image.id)
+        .then((result) => {
+          // console.log("Image deleted:", result);
+        })
+        .catch((error) => {
+          console.log("Error deleting image:", error);
+        })
+    );
 
     updates.forEach((update) => (home[update] = req.body[update]));
+
+    // Upload each file to Cloudinary
+    const uploadedImages = await Promise.all(
+      req.files.map((file) => uploadImageToCloudinary(file.buffer))
+    );
+
+    home.images = uploadedImages;
+
     await home.save();
 
-    res.send({
-      _id: home._id,
-      title: home.title,
-      location: home.location,
-      price: home.price,
-      addressLink: home.addressLink,
-      phone: home.phone,
-      ownerName: home.ownerName,
-      img: fullUrl,
-      createdAt: home.createdAt,
-      updatedAt: home.updatedAt,
-    });
+    res.send(home);
   } catch (e) {
     res.status(400).send(e);
   }
@@ -139,8 +133,7 @@ router.delete("/home/:id", async (req, res) => {
     }
 
     home.images.map((image) =>
-      cloudinary
-        .destory(image.id)
+      destory(image.id)
         .then((result) => {
           // console.log("Image deleted:", result);
         })
@@ -156,4 +149,5 @@ router.delete("/home/:id", async (req, res) => {
     res.status(400).send(e);
   }
 });
+
 module.exports = router;
