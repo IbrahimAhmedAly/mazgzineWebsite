@@ -3,22 +3,18 @@ const sharp = require("sharp");
 const Home = require("../models/homes");
 const router = new express.Router();
 
-const uploadImage = require("../upload-images/multer");
+const upload = require("../upload-images/multer");
+const { uploadImageToCloudinary } = require("../upload-images/cloudinary");
 const cloudinary = require("../upload-images/cloudinary");
-const fs = require("fs");
 
-const upload = require("../utils/multer");
-const { error } = require("console");
-
-router.post("/home", uploadImage.array("upload", 10), async (req, res) => {
+router.post("/home", upload.array("upload", 10), async (req, res) => {
   const { title, location, price, addressLink, phone, ownerName } = req.body;
+  const files = req.files;
 
-  const uploader = (path) => cloudinary.uploads(path, "Images");
-
-  const imagePromises = req.files.map((file) => uploader(file.path));
-  const uploadedImages = await Promise.all(imagePromises);
-
-  req.files.map((file) => fs.unlinkSync(file.path));
+  // Upload each file to Cloudinary
+  const uploadedImages = await Promise.all(
+    files.map((file) => uploadImageToCloudinary(file.buffer))
+  );
 
   const home = new Home({
     title,

@@ -1,4 +1,4 @@
-const cloudinary = require("cloudinary");
+const cloudinary = require("cloudinary").v2;
 
 const dotenv = require("dotenv");
 
@@ -10,21 +10,52 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-exports.uploads = (file, folder) => {
-  return new Promise((resolve) => {
-    cloudinary.uploader.upload(
-      file,
-      (result) => {
-        resolve({
-          url: result.url,
-          id: result.public_id,
-        });
-      },
-      {
-        resource_type: "auto",
-        folder: folder,
-      }
-    );
+// exports.uploads = (file, folder) => {
+//   return new Promise((resolve) => {
+//     cloudinary.uploader.upload(
+//       file,
+//       (result) => {
+// resolve({
+//   url: result.url,
+//   id: result.public_id,
+// });
+//       },
+//       {
+//         resource_type: "auto",
+//         folder: folder,
+//       }
+//     );
+//   });
+// };
+
+// Function to upload an image buffer to Cloudinary
+// const uploadImageToCloudinary = (buffer) => {
+//   return new Promise((resolve, reject) => {
+//     cloudinary.uploader
+//       .upload_stream((error, result) => {
+//         if (error) reject(error);
+//         else
+//           resolve({
+//             url: result.url,
+//             id: result.public_id,
+//           });
+//       })
+//       .end(buffer);
+//   });
+// };
+
+const uploadImageToCloudinary = (buffer) => {
+  return new Promise((resolve, reject) => {
+    cloudinary.uploader
+      .upload_stream((error, result) => {
+        if (error) reject(error);
+        else
+          resolve({
+            url: result.url,
+            id: result.public_id,
+          });
+      })
+      .end(buffer);
   });
 };
 
@@ -38,4 +69,8 @@ exports.destory = (publicId) => {
       }
     });
   });
+};
+
+module.exports = {
+  uploadImageToCloudinary,
 };
