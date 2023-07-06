@@ -84,6 +84,7 @@ app.use((req, res, next) => {
 const allowedOrigins = [
   "http://localhost:3000",
   "https://admin-panel-l4je1hq2m-ibrahimahmedaly.vercel.app",
+  "https://admin-panel-2pwbni1qc-ibrahimahmedaly.vercel.app",
 ];
 
 app.use(
