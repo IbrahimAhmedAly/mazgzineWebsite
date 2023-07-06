@@ -1,66 +1,42 @@
 const express = require("express");
-const sharp = require("sharp");
 const Category = require("../models/categories");
 const router = new express.Router();
 
-const upload = require("../utils/multer");
+const upload = require("../upload-images/multer");
+const { uploadImageToCloudinary } = require("../upload-images/cloudinary");
+const { destory } = require("../upload-images/cloudinary");
 
 router.post("/category", upload.single("upload"), async (req, res) => {
-  const fullUrl = req.protocol + "://" + req.get("host") + req.originalUrl;
-  const category = new Category(req.body);
+  const { title } = req.body;
+  const uploadedImage = await uploadImageToCloudinary(req.file.buffer);
 
-  const buffer = await sharp(req.file.buffer)
-    .resize({ width: 250, height: 250 })
-    .png()
-    .toBuffer();
-
-  if (req.file?.buffer) {
-    category.img = buffer;
-  }
-
+  const category = new Category({
+    title,
+    image: uploadedImage,
+  });
   try {
     await category.save();
-    res.status(201).send({
-      _id: category._id,
-      title: category.title,
-      img: `${fullUrl}/upload/${category._id}`,
-    });
+    res.status(201).send(category);
   } catch (e) {
     res.status(400).send(e);
   }
 });
 
 router.get("/category", async (req, res) => {
-  const fullUrl = `${req.protocol}:${req.get("host")}/api/category/upload/`;
   const categories = await Category.find({});
 
-  const updateCategories = categories.map((category) => {
-    return {
-      _id: category._id,
-      title: category.title,
-      img: category.img ? fullUrl + category._id : "",
-    };
-  });
-
   try {
-    res.send(updateCategories);
+    res.send(categories);
   } catch (e) {
     res.status(400).send(e);
   }
 });
 
 router.get("/getCategory/:id", async (req, res) => {
-  const fullUrl = `${req.protocol}:${req.get("host")}/api/category/upload/${
-    req.params.id
-  }`;
   const category = await Category.findById({ _id: req.params.id });
 
   try {
-    res.send({
-      _id: category._id,
-      title: category.title,
-      img: fullUrl,
-    });
+    res.send(category);
   } catch (e) {
     res.status(400).send(e);
   }
@@ -78,14 +54,6 @@ router.get("/category/:id", async (req, res) => {
 });
 
 router.patch("/category/:id", upload.single("upload"), async (req, res) => {
-  const fullUrl = `${req.protocol}:${req.get("host")}/api/category/upload/${
-    req.params.id
-  }`;
-  const buffer = await sharp(req.file.buffer)
-    .resize({ width: 250, height: 250 })
-    .png()
-    .toBuffer();
-
   const updates = Object.keys(req.body);
   const allowedUpdates = ["title", "upload"];
 
@@ -104,17 +72,21 @@ router.patch("/category/:id", upload.single("upload"), async (req, res) => {
       return res.status(404).send();
     }
 
-    if (req.file?.buffer) {
-      category.img = buffer;
-    }
+    destory(category.image[0].id)
+      .then((result) => {
+        // console.log("Image deleted:", result);
+      })
+      .catch((error) => {
+        console.log("Error deleting image:", error);
+      });
 
     updates.forEach((update) => (category[update] = req.body[update]));
+
+    const uploadedImage = await uploadImageToCloudinary(req.file.buffer);
+    category.image[0] = uploadedImage;
+
     await category.save();
-    res.send({
-      _id: category._id,
-      title: category.title,
-      img: fullUrl,
-    });
+    res.send(category);
   } catch (e) {
     res.status(400).send(e);
   }
@@ -122,41 +94,27 @@ router.patch("/category/:id", upload.single("upload"), async (req, res) => {
 
 router.delete("/category/:id", async (req, res) => {
   try {
-    const category = await Category.findByIdAndRemove(req.params.id);
+    const category = await Category.findById(req.params.id);
 
     if (!category) {
       res.status(404).send();
     }
+
+    destory(category.image[0].id)
+      .then((result) => {
+        // console.log("Image deleted:", result);
+      })
+      .catch((error) => {
+        console.log("Error deleting image:", error);
+      });
+
+    await Category.findByIdAndRemove(req.params.id);
 
     res.send();
   } catch (e) {
     console.log(e);
     res.status(400).send(e);
   }
-});
-
-router.get("/category/upload/:id", async (req, res) => {
-  try {
-    const category = await Category.findById(req.params.id);
-
-    if (!category || !category.img) {
-      throw new Error();
-    }
-    res.set("Content-Type", "image/png");
-    res.send(category.img);
-  } catch (error) {
-    res.status(404).send();
-  }
-});
-
-router.delete("/category/upload/:id", async (req, res) => {
-  const _id = req.params.id;
-
-  const category = await Category.findOne({ _id });
-  category.img = undefined;
-  await category.save();
-
-  res.send();
 });
 
 module.exports = router;
