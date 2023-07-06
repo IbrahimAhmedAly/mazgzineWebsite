@@ -1,5 +1,4 @@
 const express = require("express");
-const sharp = require("sharp");
 const Home = require("../models/homes");
 const router = new express.Router();
 
