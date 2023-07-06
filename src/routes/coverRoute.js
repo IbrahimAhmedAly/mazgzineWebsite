@@ -1,96 +1,71 @@
 const express = require("express");
 const { MongoClient, ObjectId } = require("mongodb");
-const sharp = require("sharp");
 const Cover = require("../models/covers");
 const router = new express.Router();
 
-const upload = require("../utils/multer");
+const upload = require("../upload-images/multer");
+const { uploadImageToCloudinary } = require("../upload-images/cloudinary");
+const { destory } = require("../upload-images/cloudinary");
 
 router.post("/covers", upload.single("upload"), async (req, res) => {
-  const fullUrl = req.protocol + "://" + req.get("host") + req.originalUrl;
-  const cover = new Cover(req.body);
+  const uploadedImage = await uploadImageToCloudinary(req.file.buffer);
 
-  const buffer = await sharp(req.file.buffer)
-    .resize({ width: 250, height: 250 })
-    .png()
-    .toBuffer();
-
-  if (req.file?.buffer) {
-    cover.img = buffer;
-  }
+  const cover = new Cover({
+    image: uploadedImage,
+  });
 
   try {
     await cover.save();
-    res.status(201).send({
-      _id: cover._id,
-      img: `${fullUrl}/upload/${cover._id}`,
-    });
+    res.status(201).send(cover);
   } catch (e) {
     res.status(400).send(e);
   }
 });
 
 router.get("/covers", async (req, res) => {
-  const fullUrl = `${req.protocol}:${req.get("host")}/api/covers/upload/`;
   const covers = await Cover.find({});
 
-  const updateCovers = covers.map((cover) => {
-    return {
-      _id: cover._id,
-      img: cover.img ? fullUrl + cover._id : "",
-    };
-  });
-
   try {
-    res.send(updateCovers);
+    res.send(covers);
   } catch (e) {
     res.status(400).send(e);
   }
 });
 
 router.get("/covers/:id", async (req, res) => {
-  const fullUrl = `${req.protocol}:${req.get("host")}/api/covers/upload/`;
-
   const query = { _id: { $ne: new ObjectId(req.params.id) } };
 
   const covers = await Cover.find(query);
 
-  const updateCovers = covers.map((cover) => {
-    return {
-      _id: cover._id,
-      img: cover.img ? fullUrl + cover._id : "",
-    };
-  });
-
   try {
-    res.send(updateCovers);
+    res.send(covers);
   } catch (e) {
     res.status(400).send(e);
   }
 });
 
-router.get("/covers/upload/:id", async (req, res) => {
+router.delete("/cover/:id", async (req, res) => {
   try {
-    const cover = await Cover.findById(req.params.id);
+    const cover = await Cover.findById({ _id: req.params.id });
 
-    if (!cover || !cover.img) {
-      throw new Error();
+    if (!cover) {
+      res.status(404).send();
     }
-    res.set("Content-Type", "image/png");
-    res.send(cover.img);
-  } catch (error) {
-    res.status(404).send();
+
+    destory(cover.image[0].id)
+      .then((result) => {
+        // console.log("Image deleted:", result);
+      })
+      .catch((error) => {
+        console.log("Error deleting image:", error);
+      });
+
+    await Cover.findOneAndDelete({ _id: req.params.id });
+
+    res.send();
+  } catch (e) {
+    res.status(400).send(e);
   }
-});
-
-router.delete("/covers/upload/:id", async (req, res) => {
-  const cover = await Cover.findOneAndDelete({ _id: req.params.id });
-
-  if (!cover) {
-    res.status(404).send();
-  }
-
-  res.send();
 });
 
 module.exports = router;
