@@ -9,9 +9,16 @@ const competitionSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  img: {
-    type: Buffer,
-  },
+  image: [
+    {
+      url: {
+        type: String,
+      },
+      id: {
+        type: String,
+      },
+    },
+  ],
   competitionLink: {
     type: String,
   },

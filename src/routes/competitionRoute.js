@@ -3,85 +3,50 @@ const sharp = require("sharp");
 const Competition = require("../models/competitions");
 const router = new express.Router();
 
-const upload = require("../utils/multer");
+const upload = require("../upload-images/multer");
+const { uploadImageToCloudinary } = require("../upload-images/cloudinary");
+const { destory } = require("../upload-images/cloudinary");
 
 router.post("/competition", upload.single("upload"), async (req, res) => {
-  const fullUrl = req.protocol + "://" + req.get("host") + req.originalUrl;
-  const competition = new Competition(req.body);
+  const { title, description, competitionLink } = req.body;
+  const uploadedImage = await uploadImageToCloudinary(req.file.buffer);
 
-  const buffer = await sharp(req.file.buffer)
-    .resize({ width: 250, height: 250 })
-    .png()
-    .toBuffer();
-
-  if (req.file?.buffer) {
-    competition.img = buffer;
-  }
+  const competition = new Competition({
+    title,
+    description,
+    competitionLink,
+    image: uploadedImage,
+  });
 
   try {
     await competition.save();
-    res.status(201).send({
-      _id: competition._id,
-      title: competition.title,
-      description: competition.description,
-      competitionLink: competition.competitionLink,
-      img: `${fullUrl}/upload/${competition._id}`,
-    });
+    res.send(competition);
   } catch (e) {
     res.status(400).send(e);
   }
 });
 
 router.get("/competitions", async (req, res) => {
-  const fullUrl = `${req.protocol}:${req.get("host")}/api/competition/upload/`;
-
   const competitions = await Competition.find({});
 
-  const updateCompetitions = competitions.map((competition) => {
-    return {
-      _id: competition._id,
-      title: competition.title,
-      description: competition.description,
-      competitionLink: competition.competitionLink,
-      img: competition.img ? fullUrl + competition._id : "",
-    };
-  });
-
   try {
-    res.send(updateCompetitions);
+    res.send(competitions);
   } catch (e) {
     res.status(400).send(e);
   }
 });
 
 router.get("/competition/:id", async (req, res) => {
-  const fullUrl = `${req.protocol}:${req.get("host")}/api/competition/upload/${
-    req.params.id
-  }`;
   const competition = await Competition.findById({ _id: req.params.id });
 
   try {
-    res.send({
-      _id: competition._id,
-      title: competition.title,
-      description: competition.description,
-      competitionLink: competition.competitionLink,
-      img: fullUrl,
-    });
+    res.send(competition);
   } catch (e) {
     res.status(400).send(e);
   }
 });
 
 router.patch("/competition/:id", upload.single("upload"), async (req, res) => {
-  const fullUrl = `${req.protocol}:${req.get("host")}/api/competition/upload/${
-    req.params.id
-  }`;
-  const buffer = await sharp(req.file.buffer)
-    .resize({ width: 250, height: 250 })
-    .png()
-    .toBuffer();
-
   const updates = Object.keys(req.body);
   const allowedUpdates = ["title", "description", "competitionLink", "upload"];
 
@@ -100,56 +65,48 @@ router.patch("/competition/:id", upload.single("upload"), async (req, res) => {
       return res.status(404).send();
     }
 
-    if (req.file?.buffer) {
-      competition.img = buffer;
-    }
+    destory(competition.image[0].id)
+      .then((result) => {
+        // console.log("Image deleted:", result);
+      })
+      .catch((error) => {
+        console.log("Error deleting image:", error);
+      });
 
     updates.forEach((update) => (competition[update] = req.body[update]));
+
+    const uploadedImage = await uploadImageToCloudinary(req.file.buffer);
+    competition.image[0] = uploadedImage;
+
     await competition.save();
-    res.send({
-      _id: competition._id,
-      title: competition.title,
-      description: competition.description,
-      competitionLink: competition.competitionLink,
-      img: fullUrl,
-    });
+    res.send(competition);
   } catch (e) {
     res.status(400).send(e);
   }
 });
 
 router.delete("/competition/:id", async (req, res) => {
-  await Competition.findByIdAndDelete({ _id: req.params.id });
-
   try {
+    const competition = await Competition.findById({ _id: req.params.id });
+
+    if (!competition) {
+      res.status(404).send();
+    }
+
+    destory(competition.image[0].id)
+      .then((result) => {
+        // console.log("Image deleted:", result);
+      })
+      .catch((error) => {
+        console.log("Error deleting image:", error);
+      });
+
+    await Competition.findByIdAndDelete({ _id: req.params.id });
+
     res.send();
   } catch (e) {
     res.status(400).send(e);
   }
-});
-
-router.get("/competition/upload/:id", async (req, res) => {
-  try {
-    const competition = await Competition.findById(req.params.id);
-
-    if (!competition || !competition.img) {
-      throw new Error();
-    }
-    res.set("Content-Type", "image/png");
-    res.send(competition.img);
-  } catch (error) {
-    res.status(404).send();
-  }
-});
-
-router.delete("/competition/upload/:id", async (req, res) => {
-  const _id = req.params.id;
-
-  const competition = await Competition.findOne({ _id });
-  competition.img = undefined;
-  await competition.save();
-
-  res.send();
 });
 
 module.exports = router;
